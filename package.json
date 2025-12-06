@@ -1,0 +1,25 @@
+{
+  "name": "totinh-notification",
+  "version": "1.0.0",
+  "description": "Love confession page with notification system",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@resend/node": "^2.0.0"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "love",
+    "confession",
+    "notification"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+
+
+
+

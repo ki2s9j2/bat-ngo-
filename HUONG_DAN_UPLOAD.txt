@@ -1,0 +1,112 @@
+💕 HƯỚNG DẪN UPLOAD WEBSITE TỎ TÌNH 💕
+
+═══════════════════════════════════════════════════════
+
+CÁCH 1: NETLIFY (NHANH NHẤT - KHUYẾN NGHỊ) ⭐⭐⭐
+
+Bước 1: Vào website Netlify
+   → https://www.netlify.com
+
+Bước 2: Đăng ký/Đăng nhập
+   → Click "Sign up" 
+   → Có thể đăng nhập bằng GitHub, Google, Email
+
+Bước 3: Upload file
+   → Kéo thả cả thư mục "totinh" vào trang Netlify
+   → Hoặc click "Add new site" → "Deploy manually"
+   → Chọn tất cả file: index.html, style.css, script.js, music.mp3
+
+Bước 4: Đợi deploy
+   → Đợi vài giây
+   → Bạn sẽ có link ngay: https://random-name.netlify.app
+
+Bước 5: Đổi tên (tùy chọn)
+   → Vào "Site settings" → "Change site name"
+   → Đổi thành tên bạn muốn
+
+✅ XONG! Copy link và chia sẻ cho mọi người!
+
+═══════════════════════════════════════════════════════
+
+CÁCH 2: GITHUB PAGES (MIỄN PHÍ, ỔN ĐỊNH) ⭐⭐
+
+Bước 1: Tạo tài khoản GitHub
+   → https://github.com
+   → Đăng ký miễn phí
+
+Bước 2: Tạo repository mới
+   → Click nút "+" → "New repository"
+   → Đặt tên: totinh (hoặc tên bạn muốn)
+   → Chọn "Public"
+   → Click "Create repository"
+
+Bước 3: Upload file
+   → Click "uploading an existing file"
+   → Kéo thả tất cả file: index.html, style.css, script.js, music.mp3
+   → Click "Commit changes"
+
+Bước 4: Bật GitHub Pages
+   → Vào "Settings" của repository
+   → Scroll xuống phần "Pages"
+   → Ở "Source" chọn "Deploy from a branch"
+   → Chọn branch "main" và folder "/ (root)"
+   → Click "Save"
+
+Bước 5: Đợi và lấy link
+   → Đợi 1-2 phút
+   → Link sẽ là: https://[tên-user].github.io/totinh/
+
+✅ XONG! Copy link và chia sẻ!
+
+═══════════════════════════════════════════════════════
+
+CÁCH 3: VERCEL (CHUYÊN NGHIỆP) ⭐⭐
+
+Bước 1: Vào Vercel
+   → https://vercel.com
+   → Đăng nhập bằng GitHub
+
+Bước 2: Deploy
+   → Click "Add New" → "Project"
+   → Import từ GitHub hoặc upload trực tiếp
+   → Click "Deploy"
+
+Bước 3: Lấy link
+   → Link sẽ là: https://[tên-project].vercel.app
+
+✅ XONG!
+
+═══════════════════════════════════════════════════════
+
+LƯU Ý QUAN TRỌNG:
+
+1. ✅ Phải upload TẤT CẢ file:
+   - index.html
+   - style.css
+   - script.js
+   - music.mp3
+
+2. ✅ File phải ở cùng thư mục
+
+3. ✅ Test trên máy trước khi upload:
+   - Mở index.html bằng trình duyệt
+   - Kiểm tra xem có hoạt động không
+
+4. ✅ Sau khi upload:
+   - Copy link
+   - Gửi cho người bạn muốn tỏ tình 💕
+
+═══════════════════════════════════════════════════════
+
+KHUYẾN NGHỊ:
+
+→ Dùng NETLIFY (cách 1) - NHANH NHẤT, DỄ NHẤT
+   Chỉ cần kéo thả file là xong!
+
+═══════════════════════════════════════════════════════
+
+
+
+
+
+

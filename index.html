@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>💕</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <audio id="bgMusic" loop>
+    <source src="./music.mp3" type="audio/mp3" />
+  </audio>
+
+  <div id="intro" class="active">
+    <div class="zootopia-characters">🐰💙🦊</div>
+    <p style="font-size: 1.3em; color: rgba(255, 255, 255, 0.95); margin-bottom: 40px; text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);">Tớ có điều muốn nói với cậu... 😊</p>
+    <p style="font-size: 0.9em; color: rgba(255, 255, 255, 0.85); margin-bottom: 20px;">Vì cậu thích Zootopia nên tớ muốn làm điều này đặc biệt cho cậu 💙</p>
+    <button id="startBtn">
+      🐰 Nhấn vào đây đi 🦊
+    </button>
+  </div>
+
+  <div id="mainContent">
+    <div id="line"></div>
+
+    <div id="final" class="final">
+      <div class="zootopia-icons">🐰💙🦊</div>
+      <p>Cậu đồng ý làm người yêu tớ nhaaa!!! 💖</p>
+      <div class="button-group">
+        <button id="btnYes">🐰 Đồng ý 🦊</button>
+        <button id="btnNo">Không</button>
+      </div>
+    </div>
+
+    <div id="msgYes" class="yesContent">
+      <canvas id="heartCanvas"></canvas>
+      <canvas id="pinkboard"></canvas>
+      <div id="surpriseContent">
+        <h1 id="thankYouText">🐰 Cảm ơn cậu đã đồng ý! 🦊</h1>
+        <div class="zootopia-celebration">💙✨🐰🦊✨💙</div>
+        <p style="font-size: 0.9em; color: rgba(255, 255, 255, 0.9); margin-top: 10px;">Tớ rất vui và hạnh phúc! 💕</p>
+        <div id="thankYouGif" class="gif_container">
+          <img
+            src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmo3c3l5ODh3ZGN6NHhhaDE2Mjg1ZjkwOXczdTFxbWM3dTBtaW9zaiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/9XY4f3FgFTT4QlaYqa/giphy.gif"
+            alt="Cute Gif" />
+        </div>
+        <h2 id="surpriseText" style="display: none; font-size: clamp(1.5rem, 4vw, 2.5rem); color: #ff1493; margin-top: 30px; text-shadow: 0 0 20px rgba(255, 20, 147, 0.8), 0 0 40px rgba(255, 20, 147, 0.6); animation: glow 2s ease-in-out infinite alternate;">
+          🐰💖 Nhưng đợi đã... 🦊💖<br>
+          <span style="font-size: 0.8em; display: block; margin-top: 15px;">Còn một điều đặc biệt nữa...</span>
+        </h2>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
