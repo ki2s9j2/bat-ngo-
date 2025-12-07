@@ -421,17 +421,17 @@ document.addEventListener('DOMContentLoaded', function () {
       if (thankYouText) thankYouText.style.display = 'block';
       if (thankYouGif) thankYouGif.style.display = 'block';
       
-      // Sau 2 giây, hiện text bất ngờ
+      // Sau 2.5 giây, hiện text bất ngờ cuối cùng
       setTimeout(() => {
-        const surpriseText = document.getElementById('surpriseText');
-        if (surpriseText) {
-          surpriseText.style.display = 'block';
-          surpriseText.style.opacity = '0';
-          surpriseText.style.animation = 'fadeInScale 0.8s ease-out forwards';
+        const finalSurpriseText = document.getElementById('finalSurpriseText');
+        if (finalSurpriseText) {
+          finalSurpriseText.style.display = 'block';
+          finalSurpriseText.style.opacity = '0';
+          finalSurpriseText.style.animation = 'fadeInScale 0.8s ease-out forwards';
         }
-      }, 2000);
+      }, 2500);
       
-      // Sau 4.5 giây, ẩn tất cả và chạy animation trái tim
+      // Sau 5 giây, ẩn tất cả và chạy animation trái tim
       setTimeout(() => {
         const surpriseContent = document.getElementById('surpriseContent');
         if (thankYouText) {
@@ -442,10 +442,10 @@ document.addEventListener('DOMContentLoaded', function () {
           thankYouGif.style.opacity = '0';
           thankYouGif.style.transition = 'opacity 0.8s ease-out';
         }
-        const surpriseText = document.getElementById('surpriseText');
-        if (surpriseText) {
-          surpriseText.style.opacity = '0';
-          surpriseText.style.transition = 'opacity 0.8s ease-out';
+        const finalSurpriseText = document.getElementById('finalSurpriseText');
+        if (finalSurpriseText) {
+          finalSurpriseText.style.opacity = '0';
+          finalSurpriseText.style.transition = 'opacity 0.8s ease-out';
         }
         
         // Sau khi fade out xong, ẩn hoàn toàn và chạy animation
@@ -476,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 90000); // 90 giây = 1 phút 30 giây
           }, 1500); // Delay 1.5 giây
         }, 800);
-      }, 4500);
+      }, 5000);
     }, 300);
     
     bgMusic.pause();
