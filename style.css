@@ -320,6 +320,21 @@ body {
     min-width: auto;
   }
   
+  .final-message-title {
+    font-size: clamp(0.85rem, 2.2vw, 1.2rem) !important;
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+  
+  .final-message-text {
+    font-size: clamp(0.65rem, 1.8vw, 0.9rem) !important;
+    line-height: 1.5;
+  }
+  
+  #finalMessage {
+    padding: 20px 15px !important;
+  }
+  
   .floating-heart {
     font-size: 15px !important;
   }
@@ -806,4 +821,20 @@ button:active {
   font-size: clamp(0.95rem, 2.5vw, 1.1rem);
   color: #666;
   line-height: 1.6;
+}
+
+.final-message-title {
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 15px;
+  text-shadow: 0 0 20px rgba(255, 20, 147, 0.8), 0 0 40px rgba(255, 20, 147, 0.6);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.final-message-text {
+  font-size: clamp(0.75rem, 2vw, 1.1rem);
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
 }
