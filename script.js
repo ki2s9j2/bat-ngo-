@@ -280,10 +280,43 @@ document.addEventListener('DOMContentLoaded', function () {
       // Dừng nhạc nền
       bgMusic.pause();
       bgMusic.currentTime = 0;
-      // Phát nhạc trái tim
-      heartMusic.play().catch((error) => {
-        console.warn('Không thể phát nhạc trái tim (có thể file chưa có):', error);
-      });
+      
+      // Đảm bảo audio settings đúng cho Messenger
+      heartMusic.volume = 1;
+      heartMusic.muted = false;
+      
+      // Đảm bảo audio đã được unlock trên mobile/Messenger
+      // Thử phát nhạc trái tim với nhiều cách
+      function tryPlay(attempt = 0) {
+        if (attempt > 3) {
+          console.warn('⚠️ Đã thử phát nhạc 3 lần nhưng không thành công');
+          return;
+        }
+        
+        // Cách 1: Phát trực tiếp
+        const playPromise = heartMusic.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            console.log('✅ Nhạc trái tim đã phát thành công');
+          }).catch((error) => {
+            console.warn(`⚠️ Lần thử ${attempt + 1}: Không thể phát nhạc trái tim:`, error);
+            // Cách 2: Thử lại sau 100ms với volume thấp hơn
+            setTimeout(() => {
+              if (attempt === 0) {
+                heartMusic.volume = 0.5;
+              }
+              tryPlay(attempt + 1);
+            }, 100);
+          });
+        } else {
+          // Nếu không có promise, thử lại
+          setTimeout(() => tryPlay(attempt + 1), 100);
+        }
+      }
+      
+      // Thử phát ngay
+      tryPlay();
     } else {
       console.warn('Không tìm thấy element heartMusic');
     }
@@ -344,6 +377,33 @@ document.addEventListener('DOMContentLoaded', function () {
     sendNotification('yes', 'click'); // 🎉 Gửi thông báo khi đồng ý
     finalBlock.classList.remove('active');
     
+    // Unlock audio context cho mobile/Messenger - phát và dừng ngay để unlock
+    const heartMusic = document.getElementById('heartMusic');
+    if (heartMusic) {
+      // Đảm bảo audio sẵn sàng cho Messenger
+      heartMusic.volume = 1;
+      heartMusic.muted = false;
+      
+      // Phát và dừng ngay để unlock audio context
+      const unlockPromise = heartMusic.play();
+      if (unlockPromise !== undefined) {
+        unlockPromise.then(() => {
+          heartMusic.pause();
+          heartMusic.currentTime = 0;
+          console.log('✅ Audio context đã được unlock cho Messenger');
+        }).catch((err) => {
+          console.warn('⚠️ Unlock audio context thất bại:', err);
+          // Thử lại với volume = 0.1
+          heartMusic.volume = 0.1;
+          heartMusic.play().then(() => {
+            heartMusic.pause();
+            heartMusic.currentTime = 0;
+            heartMusic.volume = 1;
+          }).catch(() => {});
+        });
+      }
+    }
+    
     // Hiển thị phần "Cảm ơn"
     setTimeout(() => {
       msgYes.classList.add('active');
@@ -391,6 +451,11 @@ document.addEventListener('DOMContentLoaded', function () {
         // Sau khi fade out xong, ẩn hoàn toàn và chạy animation
         setTimeout(() => {
           if (surpriseContent) surpriseContent.style.display = 'none';
+          
+          // Thêm nền đen full màn hình cho Chrome
+          document.body.style.background = '#000';
+          msgYes.style.background = 'rgba(0, 0, 0, 0.95)';
+          
           // Delay 1.5 giây trước khi hiển thị trái tim đỏ
           setTimeout(() => {
             // Khởi động animation trái tim đỏ
