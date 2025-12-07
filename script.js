@@ -391,10 +391,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // Sau khi fade out xong, ẩn hoàn toàn và chạy animation
         setTimeout(() => {
           if (surpriseContent) surpriseContent.style.display = 'none';
-          // Hiển thị thông báo xoay ngang khi vào phần animation trái tim (mobile)
-          if (isMobile) {
-            showRotateMessage();
-          }
           // Delay 1.5 giây trước khi hiển thị trái tim đỏ
           setTimeout(() => {
             // Khởi động animation trái tim đỏ
@@ -403,6 +399,16 @@ document.addEventListener('DOMContentLoaded', function () {
             initParticleHeart();
             // Phát nhạc cho phần trái tim
             playHeartMusic();
+            
+            // Sau 1 phút 30 giây (90 giây), hiển thị thông điệp cuối cùng
+            setTimeout(() => {
+              const finalMessage = document.getElementById('finalMessage');
+              if (finalMessage) {
+                finalMessage.style.display = 'block';
+                finalMessage.style.opacity = '0';
+                finalMessage.style.animation = 'fadeInScale 1s ease-out forwards';
+              }
+            }, 90000); // 90 giây = 1 phút 30 giây
           }, 1500); // Delay 1.5 giây
         }, 800);
       }, 4500);
@@ -1234,4 +1240,3 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   */
 });
-
