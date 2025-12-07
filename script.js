@@ -8,6 +8,16 @@ document.addEventListener('DOMContentLoaded', function () {
   const bgMusic = document.getElementById('bgMusic');
   const btnNo = document.getElementById('btnNo');
   
+  // Đảm bảo nút startBtn luôn có thể click được
+  if (!startButton) {
+    console.error('Không tìm thấy nút startBtn!');
+  } else {
+    // Đảm bảo button có thể click
+    startButton.style.pointerEvents = 'auto';
+    startButton.style.cursor = 'pointer';
+    startButton.style.zIndex = '1001';
+  }
+  
   // Đếm số lần click nút "Không"
   let noButtonClickCount = 0;
   
@@ -125,21 +135,109 @@ document.addEventListener('DOMContentLoaded', function () {
 
   let currentLine = 0;
 
-  startButton.addEventListener('click', (e) => {
-    createHeartParticles(e.clientX, e.clientY, 15);
-    sendNotification('start', 'click'); // Gửi thông báo khi bắt đầu
-    intro.classList.remove('active');
-    mainContent.classList.add('active');
-    playBackgroundMusic();
+  // Hàm xử lý khi click nút Start
+  function handleStartClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Kiểm tra intro còn active không
+    if (!intro.classList.contains('active')) {
+      console.log('Intro đã bị ẩn rồi, không xử lý');
+      return;
+    }
+    
+    try {
+      const x = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : window.innerWidth / 2);
+      const y = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : window.innerHeight / 2);
+      
+      createHeartParticles(x, y, 15);
+      sendNotification('start', 'click');
+      
+      intro.classList.remove('active');
+      mainContent.classList.add('active');
+      
+      playBackgroundMusic();
+      
+      setTimeout(() => {
+        showLine(lines[currentLine]);
+      }, 300);
+      
+      console.log('✅ Đã click nút Start thành công!');
+    } catch (error) {
+      console.error('❌ Lỗi khi click nút Start:', error);
+    }
+  }
+  
+  // Đảm bảo nút startBtn luôn có thể click được
+  if (!startButton) {
+    console.error('❌ Không tìm thấy nút startBtn!');
+    // Thử tìm lại sau 100ms
     setTimeout(() => {
-      showLine(lines[currentLine]);
-    }, 300);
-  });
+      const retryBtn = document.getElementById('startBtn');
+      if (retryBtn) {
+        console.log('✅ Tìm thấy nút startBtn sau khi retry');
+        setupStartButton(retryBtn);
+      }
+    }, 100);
+  } else {
+    setupStartButton(startButton);
+  }
+  
+  function setupStartButton(btn) {
+    // Đảm bảo button có thể click
+    btn.style.pointerEvents = 'auto';
+    btn.style.cursor = 'pointer';
+    btn.style.zIndex = '1001';
+    btn.style.position = 'relative';
+    btn.setAttribute('tabindex', '0');
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('aria-label', 'Bắt đầu');
+    
+    // Event listener cho click (desktop) - dùng capture để chắc chắn
+    btn.addEventListener('click', handleStartClick, { passive: false, capture: true });
+    
+    // Event listener cho touchstart (mobile)
+    btn.addEventListener('touchstart', handleStartClick, { passive: false, capture: true });
+    
+    // Event listener cho mousedown (backup)
+    btn.addEventListener('mousedown', function(e) {
+      if (intro.classList.contains('active')) {
+        e.preventDefault();
+        handleStartClick(e);
+      }
+    }, { passive: false });
+    
+    // Event listener cho keydown (keyboard)
+    btn.addEventListener('keydown', function(e) {
+      if ((e.key === 'Enter' || e.key === ' ') && intro.classList.contains('active')) {
+        e.preventDefault();
+        handleStartClick(e);
+      }
+    });
+    
+    console.log('✅ Nút startBtn đã được setup thành công!', btn);
+  }
 
   function playBackgroundMusic() {
     bgMusic.play().catch((error) => {
       console.error('Lỗi phát nhạc:', error);
     });
+  }
+  
+  // Hàm phát nhạc cho phần trái tim
+  function playHeartMusic() {
+    const heartMusic = document.getElementById('heartMusic');
+    if (heartMusic) {
+      // Dừng nhạc nền
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
+      // Phát nhạc trái tim
+      heartMusic.play().catch((error) => {
+        console.warn('Không thể phát nhạc trái tim (có thể file chưa có):', error);
+      });
+    } else {
+      console.warn('Không tìm thấy element heartMusic');
+    }
   }
 
   function showLine(text) {
@@ -200,6 +298,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // Hiển thị phần "Cảm ơn"
     setTimeout(() => {
       msgYes.classList.add('active');
+      // Hiển thị canvas khi vào phần yesContent
+      const heartCanvas = document.getElementById('heartCanvas');
+      const pinkboard = document.getElementById('pinkboard');
+      if (heartCanvas) heartCanvas.classList.add('active');
+      if (pinkboard) pinkboard.classList.add('active');
+      
       const thankYouText = document.getElementById('thankYouText');
       const thankYouGif = document.getElementById('thankYouGif');
       const surpriseText = document.getElementById('thankYouText');
@@ -244,8 +348,10 @@ document.addEventListener('DOMContentLoaded', function () {
           }
           // Khởi động animation trái tim đỏ
           initHeartAnimation();
-          // Khởi động animation trái tim hồng (particles bay ra)
+          // Khởi động animation trái tim hồng (particles bay ra - nhiều lớp)
           initParticleHeart();
+          // Phát nhạc cho phần trái tim
+          playHeartMusic();
         }, 800);
       }, 4500);
     }, 300);
@@ -428,7 +534,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('orientationchange', function() {
-      setTimeout(resizeCanvas, 100); // Delay để đợi orientation change hoàn tất
+      setTimeout(() => {
+        resizeCanvas();
+        // Đảm bảo các nút vẫn có thể bấm được sau khi xoay màn hình
+        const finalBlock = document.getElementById('final');
+        const buttonGroup = document.querySelector('.button-group');
+        if (finalBlock && finalBlock.classList.contains('active')) {
+          finalBlock.style.zIndex = '1001';
+          finalBlock.style.pointerEvents = 'auto';
+        }
+        if (buttonGroup) {
+          buttonGroup.style.zIndex = '1002';
+          buttonGroup.style.pointerEvents = 'auto';
+        }
+      }, 200); // Tăng delay để đảm bảo resize hoàn tất
     });
 
     // Giảm traceCount để tối ưu performance
@@ -482,7 +601,7 @@ document.addEventListener('DOMContentLoaded', function () {
         vx: 0,
         vy: 0,
         R: 2,
-        speed: rand() * 1.5 + 3.5,
+        speed: rand() * 1.5 + 3.5, // Tăng speed để trái tim xuất hiện nhanh hơn
         q: ~~(rand() * heartPointsCount),
         D: 2 * (i % 2) - 1,
         force: 0.2 * rand() + 0.7,
@@ -497,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const config = {
       traceK: 0.4,
-      timeDelta: mobile ? 0.015 : 0.01 // Nhanh hơn một chút để mượt hơn
+      timeDelta: mobile ? 0.015 : 0.012 // Tăng tốc độ để trái tim xuất hiện nhanh hơn
     };
 
     let time = 0;
@@ -505,7 +624,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const loop = function () {
       const n = -Math.cos(time);
       pulse((1 + n) * 0.5, (1 + n) * 0.5);
-      time += ((Math.sin(time)) < 0 ? 9 : (n > 0.8) ? 0.2 : 1) * config.timeDelta;
+      // Tăng tốc độ để trái tim xuất hiện nhanh hơn
+      time += ((Math.sin(time)) < 0 ? 7 : (n > 0.8) ? 0.2 : 0.8) * config.timeDelta;
 
       ctx.fillStyle = "rgba(0,0,0,.08)";
       ctx.fillRect(0, 0, width, height);
@@ -517,12 +637,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const dy = u.trace[0].y - q[1];
         const length = Math.sqrt(dx * dx + dy * dy);
 
-        // Ngưỡng hợp lý để particles tạo thành hình trái tim
-        if (12 > length) {
-          if (0.93 < rand()) {
+        // Tăng ngưỡng để particles ở lại lâu hơn, trái tim xuất hiện lâu hơn
+        if (15 > length) { // Tăng từ 12 lên 15
+          if (0.95 < rand()) { // Tăng từ 0.93 lên 0.95 để ít thay đổi điểm hơn
             u.q = ~~(rand() * heartPointsCount);
           } else {
-            if (0.97 < rand()) {
+            if (0.98 < rand()) { // Tăng từ 0.97 lên 0.98
               u.D *= -1;
             }
             u.q += u.D;
@@ -533,8 +653,9 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         }
 
-        u.vx += -dx / length * u.speed;
-        u.vy += -dy / length * u.speed;
+        // Tăng tốc độ di chuyển để trái tim xuất hiện nhanh hơn
+        u.vx += -dx / length * u.speed * 1.2;
+        u.vy += -dy / length * u.speed * 1.2;
         u.trace[0].x += u.vx;
         u.trace[0].y += u.vy;
         u.vx *= u.force;
@@ -598,14 +719,14 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     })();
 
-    // Settings - tối ưu cho mobile
+    // Settings - giảm particles để đỡ nhiều
     var settings = {
       particles: {
-        length: mobile ? 500 : 1000, // Giảm particles cho mobile
-        duration: 2,
-        velocity: mobile ? 100 : 135,
-        effect: -0.35,
-        size: mobile ? 10 : 14,
+        length: mobile ? 800 : 1500, // Giảm particles từ 2000-5000 xuống 800-1500
+        duration: 2.5,
+        velocity: mobile ? 150 : 200,
+        effect: -0.6,
+        size: mobile ? 11 : 13,
       },
     };
 
@@ -733,15 +854,25 @@ document.addEventListener('DOMContentLoaded', function () {
         particleRate = settings.particles.length / settings.particles.duration,
         time;
 
-      // Điều chỉnh scale để khớp với trái tim animation - tối ưu cho mobile
-      const screenSize = Math.min(canvas.width, canvas.height);
-      const heartScale = mobile ? screenSize * 0.35 : screenSize * 0.3; // Giảm scale cho mobile
-      let scaleFactor = heartScale / 160; // Scale factor để khớp với trái tim
-
+      // Nhiều lớp trái tim với kích thước khác nhau
       function pointOnHeart(t) {
         return new Point(
-          (160 * Math.pow(Math.sin(t), 3)) * scaleFactor,
-          (130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25) * scaleFactor
+          160 * Math.pow(Math.sin(t), 3),
+          130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
+        );
+      }
+      
+      function pointOnHeartx(t) {
+        return new Point(
+          160 * Math.pow(Math.sin(t), 3),
+          130 * Math.cos(t) - 20 * Math.cos(2 * t) - 8 * Math.cos(3 * t) - 4 * Math.cos(4 * t) + 5
+        );
+      }
+      
+      function pointOnHearty(t) {
+        return new Point(
+          320 * Math.pow(Math.sin(t), 3),
+          260 * Math.cos(t) - 100 * Math.cos(2 * t) - 40 * Math.cos(3 * t) - 4 * Math.cos(4 * t) + 30
         );
       }
 
@@ -754,9 +885,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function to(t) {
           var point = pointOnHeart(t);
-          // Điều chỉnh để particles nhỏ hơn và khớp với trái tim
-          point.x = settings.particles.size / 3 + point.x * settings.particles.size / (550 * scaleFactor);
-          point.y = settings.particles.size / 3 - point.y * settings.particles.size / (550 * scaleFactor);
+          point.x = settings.particles.size / 2 + (point.x * settings.particles.size) / 350;
+          point.y = settings.particles.size / 2 - (point.y * settings.particles.size) / 350;
           return point;
         }
 
@@ -770,7 +900,8 @@ document.addEventListener('DOMContentLoaded', function () {
           context.lineTo(point.x, point.y);
         }
         context.closePath();
-        context.fillStyle = '#ea80b0';
+        // Màu hồng đẹp hơn
+        context.fillStyle = '#ff3490';
         context.fill();
 
         var image = new Image();
@@ -787,14 +918,245 @@ document.addEventListener('DOMContentLoaded', function () {
 
         context.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Chỉ giữ lại lớp trái tim chính, giảm số lượng để không che trái tim đỏ
+        var amount = (particleRate * deltaTime) / 3; // Giảm xuống 1/3 để ít hơn
+        for (var i = 0; i < amount; i++) {
+          var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
+          var dir = pos.clone().length(settings.particles.velocity);
+          particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
+        }
+
+        // Bỏ 2 lớp phụ (amountx và amounty) để trái tim đỏ hiện rõ hơn
+
+        particles.update(deltaTime);
+        particles.draw(context, image);
+      }
+
+      function onResize() {
+        var heightRatio = 1.5;
+        canvas.width = canvas.clientWidth * heightRatio;
+        canvas.height = canvas.clientHeight * heightRatio;
+      }
+
+      window.addEventListener('resize', onResize);
+      window.addEventListener('orientationchange', function() {
+        setTimeout(onResize, 100);
+      });
+
+      setTimeout(function() {
+        onResize();
+        render();
+      }, 10);
+    })(canvas);
+  }
+
+  // Function đã bỏ - không dùng nữa
+  /*
+  function initHeartParticlesCenter() {
+    const canvas = document.getElementById('heartParticles');
+    if (!canvas) return;
+
+    // Settings
+    var settings = {
+      particles: {
+        length: 1500,
+        duration: 2.5,
+        velocity: 100,
+        effect: -1.2,
+        size: 12,
+      },
+    };
+
+    // RequestAnimationFrame polyfill
+    (function () {
+      var b = 0;
+      var c = ["ms", "moz", "webkit", "o"];
+      for (var a = 0; a < c.length && !window.requestAnimationFrame; ++a) {
+        window.requestAnimationFrame = window[c[a] + "RequestAnimationFrame"];
+        window.cancelAnimationFrame = window[c[a] + "CancelAnimationFrame"] || window[c[a] + "CancelRequestAnimationFrame"];
+      }
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = function (h, e) {
+          var d = new Date().getTime();
+          var f = Math.max(0, 16 - (d - b));
+          var g = window.setTimeout(function () {
+            h(d + f);
+          }, f);
+          b = d + f;
+          return g;
+        };
+      }
+      if (!window.cancelAnimationFrame) {
+        window.cancelAnimationFrame = function (d) {
+          clearTimeout(d);
+        };
+      }
+    })();
+
+    // Point class
+    var Point = (function () {
+      function Point(x, y) {
+        this.x = typeof x !== "undefined" ? x : 0;
+        this.y = typeof y !== "undefined" ? y : 0;
+      }
+      Point.prototype.clone = function () {
+        return new Point(this.x, this.y);
+      };
+      Point.prototype.length = function (length) {
+        if (typeof length == "undefined") return Math.sqrt(this.x * this.x + this.y * this.y);
+        this.normalize();
+        this.x *= length;
+        this.y *= length;
+        return this;
+      };
+      Point.prototype.normalize = function () {
+        var length = this.length();
+        this.x /= length;
+        this.y /= length;
+        return this;
+      };
+      return Point;
+    })();
+
+    // Particle class
+    var Particle = (function () {
+      function Particle() {
+        this.position = new Point();
+        this.velocity = new Point();
+        this.acceleration = new Point();
+        this.age = 0;
+      }
+      Particle.prototype.initialize = function (x, y, dx, dy) {
+        this.position.x = x;
+        this.position.y = y;
+        this.velocity.x = dx;
+        this.velocity.y = dy;
+        this.acceleration.x = dx * settings.particles.effect;
+        this.acceleration.y = dy * settings.particles.effect;
+        this.age = 0;
+      };
+      Particle.prototype.update = function (deltaTime) {
+        this.position.x += this.velocity.x * deltaTime;
+        this.position.y += this.velocity.y * deltaTime;
+        this.velocity.x += this.acceleration.x * deltaTime;
+        this.velocity.y += this.acceleration.y * deltaTime;
+        this.age += deltaTime;
+      };
+      Particle.prototype.draw = function (context, image) {
+        function ease(t) {
+          return --t * t * t + 1;
+        }
+        var size = image.width * ease(this.age / settings.particles.duration);
+        context.globalAlpha = 1 - this.age / settings.particles.duration;
+        context.drawImage(image, this.position.x - size / 2, this.position.y - size / 2, size, size);
+      };
+      return Particle;
+    })();
+
+    // ParticlePool class
+    var ParticlePool = (function () {
+      var particles, firstActive = 0, firstFree = 0, duration = settings.particles.duration;
+      function ParticlePool(length) {
+        particles = new Array(length);
+        for (var i = 0; i < particles.length; i++) particles[i] = new Particle();
+      }
+      ParticlePool.prototype.add = function (x, y, dx, dy) {
+        particles[firstFree].initialize(x, y, dx, dy);
+        firstFree++;
+        if (firstFree == particles.length) firstFree = 0;
+        if (firstActive == firstFree) firstActive++;
+        if (firstActive == particles.length) firstActive = 0;
+      };
+      ParticlePool.prototype.update = function (deltaTime) {
+        var i;
+        if (firstActive < firstFree) {
+          for (i = firstActive; i < firstFree; i++) particles[i].update(deltaTime);
+        }
+        if (firstFree < firstActive) {
+          for (i = firstActive; i < particles.length; i++) particles[i].update(deltaTime);
+          for (i = 0; i < firstFree; i++) particles[i].update(deltaTime);
+        }
+        while (particles[firstActive].age >= duration && firstActive != firstFree) {
+          firstActive++;
+          if (firstActive == particles.length) firstActive = 0;
+        }
+      };
+      ParticlePool.prototype.draw = function (context, image) {
+        if (firstActive < firstFree) {
+          for (i = firstActive; i < firstFree; i++) particles[i].draw(context, image);
+        }
+        if (firstFree < firstActive) {
+          for (i = firstActive; i < particles.length; i++) particles[i].draw(context, image);
+          for (i = 0; i < firstFree; i++) particles[i].draw(context, image);
+        }
+      };
+      return ParticlePool;
+    })();
+
+    // Main animation
+    (function (canvas) {
+      var context = canvas.getContext("2d"),
+        particles = new ParticlePool(settings.particles.length),
+        particleRate = settings.particles.length / settings.particles.duration,
+        time;
+
+      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent);
+      const screenSize = Math.min(window.innerWidth, window.innerHeight);
+      const heartScale = isMobile ? screenSize * 0.35 : screenSize * 0.3;
+      let scaleFactor = heartScale / 160;
+
+      function pointOnHeart(t) {
+        return new Point(
+          (160 * Math.pow(Math.sin(t), 3)) * scaleFactor,
+          (130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25) * scaleFactor
+        );
+      }
+
+      var image = (function () {
+        var canvas = document.createElement("canvas"),
+          context = canvas.getContext("2d");
+        canvas.width = settings.particles.size;
+        canvas.height = settings.particles.size;
+
+        function to(t) {
+          var point = pointOnHeart(t);
+          point.x = settings.particles.size / 3 + (point.x * settings.particles.size) / (550 * scaleFactor);
+          point.y = settings.particles.size / 3 - (point.y * settings.particles.size) / (550 * scaleFactor);
+          return point;
+        }
+
+        context.beginPath();
+        var t = -Math.PI;
+        var point = to(t);
+        context.moveTo(point.x, point.y);
+        while (t < Math.PI) {
+          t += 0.01;
+          point = to(t);
+          context.lineTo(point.x, point.y);
+        }
+        context.closePath();
+
+        // Màu hồng thay vì xanh cyan
+        context.fillStyle = "#ff69b4";
+        context.fill();
+
+        var image = new Image();
+        image.src = canvas.toDataURL();
+        return image;
+      })();
+
+      function render() {
+        requestAnimationFrame(render);
+        var newTime = new Date().getTime() / 1000,
+          deltaTime = newTime - (time || newTime);
+        time = newTime;
+        context.clearRect(0, 0, canvas.width, canvas.height);
         var amount = particleRate * deltaTime;
         for (var i = 0; i < amount; i++) {
           var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
           var dir = pos.clone().length(settings.particles.velocity);
-          // Đảm bảo particles bay ra từ đúng tâm trái tim
           particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
         }
-
         particles.update(deltaTime);
         particles.draw(context, image);
       }
@@ -802,9 +1164,8 @@ document.addEventListener('DOMContentLoaded', function () {
       function onResize() {
         canvas.width = canvas.clientWidth;
         canvas.height = canvas.clientHeight;
-        // Cập nhật lại scale khi resize - tối ưu cho mobile
         const newScreenSize = Math.min(canvas.width, canvas.height);
-        const newHeartScale = mobile ? newScreenSize * 0.35 : newScreenSize * 0.3; // Giảm scale cho mobile
+        const newHeartScale = isMobile ? newScreenSize * 0.35 : newScreenSize * 0.3;
         scaleFactor = newHeartScale / 160;
       }
 
@@ -819,4 +1180,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }, 10);
     })(canvas);
   }
+  */
 });
+

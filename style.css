@@ -44,7 +44,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
+  pointer-events: none !important;
   z-index: 1;
   overflow: hidden;
 }
@@ -113,7 +113,8 @@ body {
   flex-direction: column;
   padding: 20px;
   text-align: center;
-  z-index: 100;
+  z-index: 1000;
+  pointer-events: auto;
 }
 
 #intro.active,
@@ -124,7 +125,8 @@ body {
 #intro {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  z-index: 100;
+  z-index: 1000;
+  pointer-events: auto;
 }
 
 .intro-title {
@@ -144,6 +146,87 @@ body {
   font-weight: 400;
   text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.15);
   animation: fadeIn 0.8s ease-out 0.2s both;
+}
+
+/* Responsive: Điện thoại dọc - chữ bé lại */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .intro-title {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+  }
+  
+  .intro-subtitle {
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+  }
+  
+  .final-question {
+    font-size: clamp(1.3rem, 4vw, 1.8rem);
+  }
+  
+  #line {
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
+    padding: 30px 35px;
+  }
+  
+  .thank-you-message {
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  }
+  
+  #thankYouText {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+  }
+}
+
+/* Responsive: Điện thoại ngang - làm bé lại đoạn "Đồng ý" */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+  button {
+    font-size: 12px;
+    padding: 10px 20px;
+  }
+  
+  #startBtn {
+    font-size: 14px;
+    padding: 12px 28px;
+  }
+  
+  #btnYes {
+    font-size: 14px;
+    padding: 12px 24px;
+  }
+  
+  #btnNo {
+    font-size: 12px;
+    padding: 10px 20px;
+  }
+  
+  /* Làm bé lại phần final (câu hỏi và nút) */
+  .final {
+    padding: 15px 20px;
+  }
+  
+  .final-question {
+    font-size: clamp(1rem, 3vw, 1.3rem) !important;
+    line-height: 1.4;
+    margin-bottom: 15px;
+  }
+  
+  .button-group {
+    gap: 12px;
+    margin-top: 15px;
+  }
+  
+  /* Giảm padding để vừa màn hình */
+  .final.active {
+    padding: 20px 15px;
+  }
+  
+  .button-group {
+    gap: 15px;
+  }
+  
+  .final {
+    padding: 25px;
+    max-width: 90%;
+  }
 }
 
 @keyframes bounce {
@@ -202,10 +285,13 @@ button {
   box-shadow: 0 8px 25px rgba(255, 105, 180, 0.5);
   user-select: none;
   position: relative;
-  z-index: 10;
+  z-index: 1003;
   font-weight: 600;
   overflow: hidden;
   letter-spacing: 0.5px;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(255, 105, 180, 0.3);
 }
 
 button::before {
@@ -242,10 +328,20 @@ button:active {
   padding: 18px 50px;
   background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
   font-weight: 700;
+  position: relative;
+  z-index: 1001 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(255, 105, 180, 0.3);
 }
 
 #startBtn:hover {
   animation-play-state: paused;
+}
+
+#startBtn:active {
+  transform: scale(0.98);
 }
 
 @keyframes pulse {
@@ -313,6 +409,9 @@ button:active {
   user-select: none;
   backdrop-filter: blur(10px);
   animation: scaleIn 0.5s ease-out;
+  position: relative;
+  z-index: 1001;
+  pointer-events: auto;
 }
 
 @keyframes scaleIn {
@@ -353,6 +452,9 @@ button:active {
   justify-content: center;
   width: 100%;
   max-width: 400px;
+  position: relative;
+  z-index: 1002;
+  pointer-events: auto;
 }
 
 #btnYes {
@@ -393,11 +495,16 @@ button:active {
   max-height: 100%;
   background-color: transparent;
   z-index: 1;
-  pointer-events: none;
+  pointer-events: none !important;
   opacity: 0.85;
-  display: block;
+  display: none; /* Ẩn mặc định, chỉ hiện khi vào phần yesContent */
   /* Đảm bảo canvas hiển thị đầy đủ trên mobile */
   object-fit: contain;
+  touch-action: none;
+}
+
+#heartCanvas.active {
+  display: block;
 }
 
 #pinkboard {
@@ -409,12 +516,30 @@ button:active {
   max-width: 100%;
   max-height: 100%;
   z-index: 2;
-  pointer-events: none;
-  display: block;
+  pointer-events: none !important;
+  display: none; /* Ẩn mặc định, chỉ hiện khi vào phần yesContent */
   opacity: 0.85;
   mix-blend-mode: screen;
   /* Đảm bảo canvas hiển thị đầy đủ trên mobile */
   object-fit: contain;
+  touch-action: none;
+}
+
+#pinkboard.active {
+  display: block;
+  animation: heartbeat 1.5s infinite;
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .yesContent h1,
