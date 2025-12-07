@@ -8,10 +8,83 @@ document.addEventListener('DOMContentLoaded', function () {
   const bgMusic = document.getElementById('bgMusic');
   const btnNo = document.getElementById('btnNo');
   
-  // Hàm gửi thông báo về server
+  // Đếm số lần click nút "Không"
+  let noButtonClickCount = 0;
+  
+  // Kiểm tra mobile và hướng màn hình
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // Hàm hiển thị alert dễ thương
+  function showCuteAlert(message) {
+    const alertBox = document.createElement('div');
+    alertBox.className = 'cute-alert';
+    alertBox.innerHTML = `
+      <div class="cute-alert-content">
+        <div class="cute-alert-emoji">💕</div>
+        <div class="cute-alert-message">${message}</div>
+        <button class="cute-alert-btn" onclick="this.parentElement.parentElement.remove()">OK</button>
+      </div>
+    `;
+    document.body.appendChild(alertBox);
+    setTimeout(() => alertBox.classList.add('show'), 10);
+  }
+  
+  // Hàm hiển thị thông báo xoay ngang màn hình
+  function showRotateMessage() {
+    if (!isMobile) return;
+    
+    const isLandscape = window.innerWidth > window.innerHeight;
+    if (isLandscape) return; // Đã xoay ngang rồi thì không hiện
+    
+    const rotateBox = document.createElement('div');
+    rotateBox.id = 'rotateMessage';
+    rotateBox.className = 'rotate-message';
+    rotateBox.innerHTML = `
+      <div class="rotate-message-content">
+        <div class="rotate-icon">📱</div>
+        <p class="rotate-text">Xoay ngang màn hình để xem đẹp hơn nha~ 💕</p>
+        <button class="rotate-close" onclick="this.parentElement.parentElement.remove()">✕</button>
+      </div>
+    `;
+    document.body.appendChild(rotateBox);
+    
+    // Tự động ẩn sau 5 giây
+    setTimeout(() => {
+      if (rotateBox.parentElement) {
+        rotateBox.classList.add('fade-out');
+        setTimeout(() => rotateBox.remove(), 300);
+      }
+    }, 5000);
+    
+    // Kiểm tra khi xoay màn hình
+    window.addEventListener('orientationchange', function() {
+      setTimeout(() => {
+        const isLandscapeNow = window.innerWidth > window.innerHeight;
+        if (isLandscapeNow && rotateBox.parentElement) {
+          rotateBox.classList.add('fade-out');
+          setTimeout(() => rotateBox.remove(), 300);
+        }
+      }, 100);
+    });
+  }
+  
+  // Hiển thị thông báo xoay ngang khi vào trang
+  showRotateMessage();
+  
+  // ⚙️ CẤU HÌNH API URL - Thay đổi URL này thành API của bạn
+  // Ví dụ: 'https://totinh-api.vercel.app/api/notify'
+  // Để trống ('') nếu không muốn dùng API
+  const API_URL = ''; // 👈 ĐIỀN API URL CỦA BẠN VÀO ĐÂY
+  
+  // Hàm gửi thông báo về server API riêng
   async function sendNotification(action, eventType = 'click') {
+    // Nếu không có API URL, bỏ qua
+    if (!API_URL || API_URL.trim() === '') {
+      return;
+    }
+    
     try {
-      const response = await fetch('/api/notify', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,11 +103,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (response.ok) {
         console.log('✅ Notification sent successfully');
       } else {
-        console.error('❌ Failed to send notification');
+        console.warn('⚠️ Failed to send notification:', response.status);
       }
     } catch (error) {
-      console.error('❌ Error sending notification:', error);
-      // Không hiển thị lỗi cho người dùng để tránh làm gián đoạn trải nghiệm
+      // Không hiển thị lỗi cho người dùng, chỉ log trong console
+      console.warn('⚠️ Notification service unavailable:', error.message);
     }
   }
   
@@ -42,12 +115,12 @@ document.addEventListener('DOMContentLoaded', function () {
   createFloatingHearts();
 
   const lines = [
-    "Từ lần đầu gặp cậu, tớ đã biết tim mình không ổn.",
-    "Mỗi tin nhắn từ cậu làm tim tớ rung lên từng nhịp.",
-    "Tớ đã nghĩ mãi… liệu có nên nói điều này không.",
-    "Nhưng nếu không nói thì sẽ tiếc cả đời.",
-    "Nên hôm nay, tớ quyết định nói ra...",
-    "Tớ thích cậu! 💙"
+    "Chúng ta đã học chung được 4 năm rồi...",
+    "Trong suốt thời gian đó, tớ đã để ý đến cậu rất nhiều.",
+    "Mỗi ngày đến lớp, được nhìn thấy cậu là niềm vui của tớ.",
+    "Tớ đã giấu cảm xúc này trong lòng khá lâu rồi...",
+    "Nhưng hôm nay, tớ muốn thành thật với cậu.",
+    "Tớ thích cậu, thật lòng đấy."
   ];
 
   let currentLine = 0;
@@ -142,8 +215,6 @@ document.addEventListener('DOMContentLoaded', function () {
           surpriseText.style.display = 'block';
           surpriseText.style.opacity = '0';
           surpriseText.style.animation = 'fadeInScale 0.8s ease-out forwards';
-          // Tạo nhiều tia sáng xung quanh
-          createSparkles();
         }
       }, 2000);
       
@@ -167,9 +238,13 @@ document.addEventListener('DOMContentLoaded', function () {
         // Sau khi fade out xong, ẩn hoàn toàn và chạy animation
         setTimeout(() => {
           if (surpriseContent) surpriseContent.style.display = 'none';
-          // Khởi động animation trái tim lý tưởng với tia sáng
+          // Hiển thị thông báo xoay ngang khi vào phần animation trái tim (mobile)
+          if (isMobile) {
+            showRotateMessage();
+          }
+          // Khởi động animation trái tim đỏ
           initHeartAnimation();
-          // Khởi động animation particles bay ra từ trái tim
+          // Khởi động animation trái tim hồng (particles bay ra)
           initParticleHeart();
         }, 800);
       }, 4500);
@@ -190,34 +265,32 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Phát hiện khi người dùng chuẩn bị click "Không" (cho cả desktop và mobile)
-  btnNo.addEventListener('mouseover', () => {
-    sendNotification('no', 'hover'); // Gửi thông báo khi hover (desktop)
-    const maxX = window.innerWidth - btnNo.offsetWidth;
-    const maxY = window.innerHeight - btnNo.offsetHeight;
-    btnNo.style.position = 'fixed';
-    btnNo.style.left = `${Math.random() * maxX}px`;
-    btnNo.style.top = `${Math.random() * maxY}px`;
-  });
-
-  // Phát hiện khi người dùng chạm vào nút "Không" trên mobile (trước khi click)
-  btnNo.addEventListener('touchstart', (e) => {
-    sendNotification('no', 'touchstart'); // Gửi thông báo khi touch (mobile)
-  }, { passive: true });
-
-  // Phát hiện khi người dùng di chuyển chuột gần nút "Không"
-  btnNo.addEventListener('mouseenter', () => {
-    sendNotification('no', 'mouseenter');
-  });
-
   btnNo.addEventListener('click', () => {
+    noButtonClickCount++;
+    
     createHeartParticles(
       btnNo.offsetLeft + btnNo.offsetWidth / 2,
       btnNo.offsetTop + btnNo.offsetHeight / 2,
       10
     );
-    sendNotification('no', 'click'); // Gửi thông báo khi click
-    alert('Thôi mà, bấm lại nút "Đồng ý" nhaaa~');
+    sendNotification('no', 'click');
+    
+    if (noButtonClickCount === 1) {
+      // Lần 1: Níu kéo - dễ thương hơn
+      showCuteAlert('Thôi mà~ 😊<br>Cậu suy nghĩ lại một chút nữa đi mà~<br>Bấm nút "Đồng ý" nhaaa! 💕');
+    } else if (noButtonClickCount === 2) {
+      // Lần 2: Từ bỏ - dễ thương hơn
+      btnNo.style.display = 'none';
+      finalBlock.innerHTML = `
+        <p style="font-size: 1.5rem; color: #d6336c; margin-bottom: 20px; font-weight: 600;">
+          Tớ hiểu rồi... 😔
+        </p>
+        <p style="font-size: 1.1rem; color: #666; line-height: 1.6;">
+          Dù sao cũng cảm ơn cậu đã dành thời gian xem trang này của tớ.<br>
+          Chúc cậu luôn hạnh phúc nhé! 💙
+        </p>
+      `;
+    }
   });
   
   // Tạo trái tim bay quanh màn hình
@@ -286,40 +359,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Tạo tia sáng (sparkles) xung quanh
-  function createSparkles() {
-    const sparkleContainer = document.createElement('div');
-    sparkleContainer.style.position = 'fixed';
-    sparkleContainer.style.top = '0';
-    sparkleContainer.style.left = '0';
-    sparkleContainer.style.width = '100%';
-    sparkleContainer.style.height = '100%';
-    sparkleContainer.style.pointerEvents = 'none';
-    sparkleContainer.style.zIndex = '1000';
-    document.body.appendChild(sparkleContainer);
-
-    for (let i = 0; i < 30; i++) {
-      setTimeout(() => {
-        const sparkle = document.createElement('div');
-        sparkle.className = 'sparkle';
-        sparkle.style.position = 'absolute';
-        sparkle.style.width = '4px';
-        sparkle.style.height = '4px';
-        sparkle.style.background = '#fff';
-        sparkle.style.borderRadius = '50%';
-        sparkle.style.boxShadow = '0 0 10px #ff1493, 0 0 20px #ff69b4, 0 0 30px #ff1493';
-        sparkle.style.left = Math.random() * 100 + '%';
-        sparkle.style.top = Math.random() * 100 + '%';
-        sparkle.style.animation = 'sparkleFloat 3s ease-in-out infinite';
-        sparkle.style.animationDelay = Math.random() * 2 + 's';
-        sparkleContainer.appendChild(sparkle);
-      }, i * 100);
-    }
-
-    setTimeout(() => {
-      sparkleContainer.remove();
-    }, 5000);
-  }
 
   // Animation trái tim lý tưởng
   function initHeartAnimation() {
@@ -381,7 +420,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Cập nhật lại scale multiplier khi resize
       const newScreenSize = Math.min(width, height);
       if (mobile) {
-        scaleMultiplier = newScreenSize * 0.4;
+        scaleMultiplier = newScreenSize * 0.35; // Giảm để vừa màn hình mobile
       } else {
         scaleMultiplier = newScreenSize * 0.3;
       }
@@ -399,9 +438,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Tăng dr để ít điểm hơn, đơn giản hơn
     const dr = mobile ? 0.2 : 0.1;
     
-    // Scale phù hợp với màn hình
+    // Scale phù hợp với màn hình - tối ưu cho mobile để nhìn được full
     const screenSize = Math.min(width, height);
-    let scaleMultiplier = mobile ? screenSize * 0.4 : screenSize * 0.3;
+    // Giảm scale cho mobile để đảm bảo trái tim vừa màn hình
+    let scaleMultiplier = mobile ? screenSize * 0.35 : screenSize * 0.3;
 
     // Chỉ tạo 2-3 lớp đơn giản
     // Lớp ngoài cùng
@@ -462,17 +502,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let time = 0;
 
-    // Tạo tia sáng xung quanh trái tim (ít hơn trên mobile)
-    const rays = [];
-    const rayCount = mobile ? 8 : 12;
-    for (let r = 0; r < rayCount; r++) {
-      rays.push({
-        angle: (r * Math.PI * 2) / rayCount,
-        length: mobile ? 60 : 100,
-        speed: mobile ? 0.015 : 0.02
-      });
-    }
-
     const loop = function () {
       const n = -Math.cos(time);
       pulse((1 + n) * 0.5, (1 + n) * 0.5);
@@ -480,27 +509,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
       ctx.fillStyle = "rgba(0,0,0,.08)";
       ctx.fillRect(0, 0, width, height);
-      
-      // Vẽ tia sáng xung quanh trái tim (đơn giản hơn)
-      ctx.save();
-      ctx.translate(width / 2, height / 2);
-      const rayBaseLength = mobile ? screenSize * 0.2 : screenSize * 0.15;
-      for (let r = 0; r < rays.length; r++) {
-        const ray = rays[r];
-        ray.angle += ray.speed;
-        const x1 = Math.cos(ray.angle) * rayBaseLength;
-        const y1 = Math.sin(ray.angle) * rayBaseLength;
-        const x2 = Math.cos(ray.angle) * (rayBaseLength + ray.length);
-        const y2 = Math.sin(ray.angle) * (rayBaseLength + ray.length);
-        
-        ctx.strokeStyle = mobile ? 'rgba(255, 20, 147, 0.5)' : 'rgba(255, 20, 147, 0.6)';
-        ctx.lineWidth = mobile ? 2 : 3;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-      }
-      ctx.restore();
 
       for (i = e.length; i--;) {
         const u = e[i];
@@ -725,9 +733,9 @@ document.addEventListener('DOMContentLoaded', function () {
         particleRate = settings.particles.length / settings.particles.duration,
         time;
 
-      // Điều chỉnh scale để khớp với trái tim animation
+      // Điều chỉnh scale để khớp với trái tim animation - tối ưu cho mobile
       const screenSize = Math.min(canvas.width, canvas.height);
-      const heartScale = mobile ? screenSize * 0.4 : screenSize * 0.3;
+      const heartScale = mobile ? screenSize * 0.35 : screenSize * 0.3; // Giảm scale cho mobile
       let scaleFactor = heartScale / 160; // Scale factor để khớp với trái tim
 
       function pointOnHeart(t) {
@@ -794,9 +802,9 @@ document.addEventListener('DOMContentLoaded', function () {
       function onResize() {
         canvas.width = canvas.clientWidth;
         canvas.height = canvas.clientHeight;
-        // Cập nhật lại scale khi resize
+        // Cập nhật lại scale khi resize - tối ưu cho mobile
         const newScreenSize = Math.min(canvas.width, canvas.height);
-        const newHeartScale = mobile ? newScreenSize * 0.4 : newScreenSize * 0.3;
+        const newHeartScale = mobile ? newScreenSize * 0.35 : newScreenSize * 0.3; // Giảm scale cho mobile
         scaleFactor = newHeartScale / 160;
       }
 
