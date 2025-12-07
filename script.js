@@ -24,6 +24,60 @@ document.addEventListener('DOMContentLoaded', function () {
   // Kiểm tra mobile và hướng màn hình
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   
+  // Hàm kiểm tra orientation và ẩn/hiện nội dung (CHỈ cho mobile)
+  function checkOrientation() {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isDesktop = window.innerWidth > 1024;
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const rotateRequired = document.getElementById('rotateRequired');
+    
+    // Desktop: luôn hiển thị nội dung, không cần check orientation
+    if (isDesktop) {
+      if (rotateRequired) {
+        rotateRequired.style.display = 'none';
+      }
+      // Không cần set display cho intro/mainContent vì CSS đã xử lý qua class .active
+      return; // Không cần check tiếp
+    }
+    
+    // Mobile: check orientation
+    if (isMobile) {
+      if (isLandscape) {
+        // Xoay ngang - hiển thị nội dung, ẩn thông báo
+        if (rotateRequired) {
+          rotateRequired.style.display = 'none';
+        }
+        // Không cần set display cho intro/mainContent vì CSS đã xử lý qua class .active
+      } else {
+        // Xoay dọc - ẩn nội dung, hiển thị thông báo
+        if (rotateRequired) {
+          rotateRequired.style.display = 'flex';
+        }
+        // CSS media query đã xử lý việc ẩn intro/mainContent
+      }
+    } else {
+      // Không phải mobile - hiển thị bình thường
+      if (rotateRequired) {
+        rotateRequired.style.display = 'none';
+      }
+      // Không cần set display cho intro/mainContent vì CSS đã xử lý qua class .active
+    }
+  }
+  
+  // Kiểm tra ngay khi load
+  checkOrientation();
+  
+  // Kiểm tra khi resize hoặc orientation change
+  let resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(checkOrientation, 150);
+  });
+  
+  window.addEventListener('orientationchange', function() {
+    setTimeout(checkOrientation, 200);
+  });
+  
   // Hàm hiển thị alert dễ thương
   function showCuteAlert(message) {
     const alertBox = document.createElement('div');
@@ -39,86 +93,81 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(() => alertBox.classList.add('show'), 10);
   }
   
-  // Hàm hiển thị thông báo xoay ngang màn hình
-  function showRotateMessage() {
-    if (!isMobile) return;
-    
-    const isLandscape = window.innerWidth > window.innerHeight;
-    if (isLandscape) return; // Đã xoay ngang rồi thì không hiện
-    
-    const rotateBox = document.createElement('div');
-    rotateBox.id = 'rotateMessage';
-    rotateBox.className = 'rotate-message';
-    rotateBox.innerHTML = `
-      <div class="rotate-message-content">
-        <div class="rotate-icon">📱</div>
-        <p class="rotate-text">Xoay ngang màn hình để xem đẹp hơn nha~ 💕</p>
-        <button class="rotate-close" onclick="this.parentElement.parentElement.remove()">✕</button>
-      </div>
-    `;
-    document.body.appendChild(rotateBox);
-    
-    // Tự động ẩn sau 5 giây
-    setTimeout(() => {
-      if (rotateBox.parentElement) {
-        rotateBox.classList.add('fade-out');
-        setTimeout(() => rotateBox.remove(), 300);
-      }
-    }, 5000);
-    
-    // Kiểm tra khi xoay màn hình
-    window.addEventListener('orientationchange', function() {
-      setTimeout(() => {
-        const isLandscapeNow = window.innerWidth > window.innerHeight;
-        if (isLandscapeNow && rotateBox.parentElement) {
-          rotateBox.classList.add('fade-out');
-          setTimeout(() => rotateBox.remove(), 300);
-        }
-      }, 100);
-    });
-  }
-  
-  // Hiển thị thông báo xoay ngang khi vào trang
-  showRotateMessage();
+  // Không cần showRotateMessage() nữa vì checkOrientation() đã xử lý
   
   // ⚙️ CẤU HÌNH API URL - Thay đổi URL này thành API của bạn
   // Ví dụ: 'https://totinh-api.vercel.app/api/notify'
   // Để trống ('') nếu không muốn dùng API
   const API_URL = ''; // 👈 ĐIỀN API URL CỦA BẠN VÀO ĐÂY
   
-  // Hàm gửi thông báo về server API riêng
-  async function sendNotification(action, eventType = 'click') {
+  // Hàm gửi thông báo về server API riêng - với retry và timeout
+  async function sendNotification(action, eventType = 'click', retries = 2) {
     // Nếu không có API URL, bỏ qua
     if (!API_URL || API_URL.trim() === '') {
       return;
     }
     
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: action, // 'yes', 'no', 'maybe', 'start'
-          eventType: eventType, // 'click', 'touchstart', 'hover'
-          timestamp: new Date().toISOString(),
-          userAgent: navigator.userAgent,
-          screenWidth: window.screen.width,
-          screenHeight: window.screen.height,
-          isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-        })
-      });
-      
-      if (response.ok) {
-        console.log('✅ Notification sent successfully');
-      } else {
-        console.warn('⚠️ Failed to send notification:', response.status);
+    const sendRequest = async (attempt = 0) => {
+      try {
+        // Tạo AbortController cho timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: action, // 'yes', 'no', 'maybe', 'start'
+            eventType: eventType, // 'click', 'touchstart', 'hover'
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            screenWidth: window.screen.width,
+            screenHeight: window.screen.height,
+            isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+          }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Notification sent successfully', data);
+          return true;
+        } else if (response.status === 429) {
+          // Rate limited - không retry
+          console.warn('⚠️ Rate limited, skipping retry');
+          return false;
+        } else if (response.status >= 500 && attempt < retries) {
+          // Server error - retry
+          throw new Error(`Server error: ${response.status}`);
+        } else {
+          console.warn('⚠️ Failed to send notification:', response.status);
+          return false;
+        }
+      } catch (error) {
+        clearTimeout(timeoutId);
+        
+        // Nếu là timeout hoặc network error và còn retry
+        if ((error.name === 'AbortError' || error.message.includes('fetch')) && attempt < retries) {
+          console.warn(`⚠️ Retry ${attempt + 1}/${retries}...`);
+          // Đợi một chút trước khi retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          return sendRequest(attempt + 1);
+        }
+        
+        // Không hiển thị lỗi cho người dùng, chỉ log trong console
+        console.warn('⚠️ Notification service unavailable:', error.message);
+        return false;
       }
-    } catch (error) {
-      // Không hiển thị lỗi cho người dùng, chỉ log trong console
-      console.warn('⚠️ Notification service unavailable:', error.message);
-    }
+    };
+    
+    // Chạy async nhưng không block UI
+    sendRequest().catch(err => {
+      console.warn('Notification error:', err);
+    });
   }
   
   // Tạo trái tim bay quanh màn hình
@@ -346,12 +395,15 @@ document.addEventListener('DOMContentLoaded', function () {
           if (isMobile) {
             showRotateMessage();
           }
-          // Khởi động animation trái tim đỏ
-          initHeartAnimation();
-          // Khởi động animation trái tim hồng (particles bay ra - nhiều lớp)
-          initParticleHeart();
-          // Phát nhạc cho phần trái tim
-          playHeartMusic();
+          // Delay 1.5 giây trước khi hiển thị trái tim đỏ
+          setTimeout(() => {
+            // Khởi động animation trái tim đỏ
+            initHeartAnimation();
+            // Khởi động animation trái tim hồng (particles bay ra - nhiều lớp)
+            initParticleHeart();
+            // Phát nhạc cho phần trái tim
+            playHeartMusic();
+          }, 1500); // Delay 1.5 giây
         }, 800);
       }, 4500);
     }, 300);
@@ -601,7 +653,7 @@ document.addEventListener('DOMContentLoaded', function () {
         vx: 0,
         vy: 0,
         R: 2,
-        speed: rand() * 1.5 + 3.5, // Tăng speed để trái tim xuất hiện nhanh hơn
+        speed: rand() * 0.8 + 1.5, // Giảm speed để trái tim xuất hiện chậm hơn
         q: ~~(rand() * heartPointsCount),
         D: 2 * (i % 2) - 1,
         force: 0.2 * rand() + 0.7,
@@ -616,7 +668,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const config = {
       traceK: 0.4,
-      timeDelta: mobile ? 0.015 : 0.012 // Tăng tốc độ để trái tim xuất hiện nhanh hơn
+      timeDelta: mobile ? 0.008 : 0.006 // Giảm tốc độ để trái tim xuất hiện chậm hơn
     };
 
     let time = 0;
@@ -624,8 +676,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const loop = function () {
       const n = -Math.cos(time);
       pulse((1 + n) * 0.5, (1 + n) * 0.5);
-      // Tăng tốc độ để trái tim xuất hiện nhanh hơn
-      time += ((Math.sin(time)) < 0 ? 7 : (n > 0.8) ? 0.2 : 0.8) * config.timeDelta;
+      // Giảm tốc độ để trái tim xuất hiện chậm hơn
+      time += ((Math.sin(time)) < 0 ? 4 : (n > 0.8) ? 0.15 : 0.5) * config.timeDelta;
 
       ctx.fillStyle = "rgba(0,0,0,.08)";
       ctx.fillRect(0, 0, width, height);
@@ -653,9 +705,9 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         }
 
-        // Tăng tốc độ di chuyển để trái tim xuất hiện nhanh hơn
-        u.vx += -dx / length * u.speed * 1.2;
-        u.vy += -dy / length * u.speed * 1.2;
+        // Giảm tốc độ di chuyển để trái tim xuất hiện chậm hơn
+        u.vx += -dx / length * u.speed * 0.7;
+        u.vy += -dy / length * u.speed * 0.7;
         u.trace[0].x += u.vx;
         u.trace[0].y += u.vy;
         u.vx *= u.force;
