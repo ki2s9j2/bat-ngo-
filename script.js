@@ -465,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Phát nhạc cho phần trái tim
             playHeartMusic();
             
-            // Sau 1 phút 30 giây (90 giây), hiển thị thông điệp cuối cùng
+            // Sau 45 giây, hiển thị thông điệp cuối cùng (rút ngắn để đỡ chờ lâu)
             setTimeout(() => {
               const finalMessage = document.getElementById('finalMessage');
               if (finalMessage) {
@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 finalMessage.style.opacity = '0';
                 finalMessage.style.animation = 'fadeInScale 1s ease-out forwards';
               }
-            }, 90000); // 90 giây = 1 phút 30 giây
+            }, 45000); // 45 giây
           }, 1500); // Delay 1.5 giây
         }, 800);
       }, 5000);
